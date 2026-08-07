@@ -1,0 +1,19 @@
+const PORT = process.env.PORT
+// const POSTGRES_DB = process.env.POSTGRES_DB
+// const POSTGRES_USER = process.env.POSTGRES_USER
+// const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD
+// const POSTGRES_PORT = process.env.POSTGRES_PORT
+const DATABASE_URL = process.env.DATABASE_URL
+const JWT_SECRET = process.env.JWT_SECRET
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET
+
+export const settings = {
+  PORT,
+  JWT_SECRET,
+  DATABASE_URL,
+  CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET
+}
