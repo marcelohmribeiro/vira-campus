@@ -1,0 +1,53 @@
+enum TipoAnuncio {
+  VENDA
+  DOACAO
+  @@schema("viracampus")
+}
+
+enum StatusAnuncio {
+  ATIVO
+  RESERVADO
+  CONCLUIDO
+  @@schema("viracampus")
+}
+
+model Usuario {
+  id        Int       @id @default(autoincrement())
+  nome      String
+  email     String    @unique
+  senhaHash String
+  anuncios  Anuncio[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  @@schema("viracampus")
+}
+
+model Categoria {
+  id        Int       @id @default(autoincrement())
+  nome      String    @unique
+  slug      String    @unique
+  anuncios  Anuncio[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  @@schema("viracampus")
+}
+model Anuncio {
+  id          Int           @id @default(autoincrement())
+  titulo      String
+  descricao   String        @db.Text
+  tipo        TipoAnuncio
+  preco       Decimal?      @db.Decimal(10, 2)
+  imagemUrl   String        @db.Text
+  status      StatusAnuncio @default(ATIVO)
+  usuarioId   Int
+  usuario     Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categoriaId Int
+  categoria   Categoria     @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  @@index([usuarioId])
+  @@index([categoriaId])
+  @@index([tipo])
+  @@index([status])
+  @@schema("viracampus")
+}
