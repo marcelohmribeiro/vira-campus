@@ -1,37 +1,44 @@
-import { UserService } from "../services/UserService.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { prisma } from "#src/service";
+import { settings } from "#src/config";
 
-export class AuthController {
-  constructor() {
-    this.userService = new UserService();
-  }
-
-  async login(req, res) {
-    const { email, password } = req.body;
+const AuthController = () => {
+  async function login(req, res, next) {
     try {
-      const user = await this.userService.findByEmail(email);
-      const checkPassword = await bcrypt.compare(password, user.password);
+      const { email, senha } = req.body;
+      if (!email || !senha) {
+        return res.status(400).json({ error: "E-mail e senha são obrigatórios" });
+      }
 
+      const data = await prisma.usuario.findUnique({
+        where: { email }
+      })
+      if(!data) {
+        return res.status(401).json({ error: "E-mail ou senha inválidos" });
+      }
+
+      const checkPassword = await bcrypt.compare(senha, data.senhaHash);
       if (!checkPassword) {
-        return res.status(401).json({ message: "Senha incorreta" });
+        return res.status(401).json({ error: "E-mail ou senha inválidos" });
       }
 
       const token = jwt.sign(
-        { id: user.id, role: user.role },
-        process.env.JWT_SECRET,
+        { id: data.id },
+        settings.JWT_SECRET,
         { expiresIn: "1d" },
       );
-
-      return res.status(200).json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token,
-      });
+      data.token = token
+      if ('senha' in data) delete data.senha
+      res.json(data)
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+    next(error);
     }
   }
+    return {
+        login
+    }
 }
+
+export { AuthController };
+export default AuthController;

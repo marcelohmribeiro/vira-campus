@@ -1,6 +1,15 @@
 {
   "type": "module",
+  "imports": {
+    "#src/config": "./src/config/index.js",
+    "#src/controllers": "./src/controllers/index.js",
+    "#src/middlewares": "./src/middlewares/index.js",
+    "#src/routes": "./src/routes/index.js",
+    "#src/service": "./src/service/index.js",
+    "#src/*": "./src/*"
+  },
   "scripts": {
+    "generate": "plop",
     "start": "node server.js"
   },
   "dependencies": {
@@ -16,6 +25,7 @@
     "validator": "^13.15.26"
   },
   "devDependencies": {
+    "plop": "^4.0.5",
     "prisma": "^7.3.0"
   }
 }

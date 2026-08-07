@@ -1,14 +1,16 @@
 import { Router } from "express";
-import { UserController } from "../controllers/UserController.js";
+import { UserController } from "#src/controllers";
+import { verifyJWT } from "#src/middlewares";
 
-const router = Router();
-const userController = new UserController();
+const UserRouter = Router();
+const { createUser, findAll, findById, findByEmail, update, deleteById } = UserController();
 
-router.get("/", userController.findAll.bind(userController));
-router.get("/:id", userController.findById.bind(userController));
-router.get("/email/:email", userController.findByEmail.bind(userController));
-router.post("/", userController.createUser.bind(userController));
-router.put("/:id", userController.update.bind(userController));
-router.delete("/:id", userController.deleteById.bind(userController));
+UserRouter.get("/", verifyJWT, findAll);
+UserRouter.get("/email/:email", verifyJWT, findByEmail);
+UserRouter.get("/:id", findById);
+UserRouter.post("/", createUser);
+UserRouter.put("/:id", verifyJWT, update);
+UserRouter.delete("/:id", verifyJWT, deleteById);
 
-export default router;
+export { UserRouter };
+export default UserRouter;
