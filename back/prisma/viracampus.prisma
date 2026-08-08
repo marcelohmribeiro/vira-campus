@@ -16,6 +16,7 @@ model Usuario {
   nome      String
   email     String    @unique
   senhaHash String
+  fotoPerfilUrl String?   @db.Text
   anuncios  Anuncio[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

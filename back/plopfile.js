@@ -8,7 +8,7 @@ export default function (plop) {
       {
         type: "input",
         name: "name",
-        message: "Nome do recurso (ex.: Categoria)",
+        message: "Nome do recurso",
         validate: required,
       },
       {

@@ -1,5 +1,5 @@
 import express from "express";
-import { AuthRouter, UserRouter } from "#src/routes";
+import { AuthRouter, UserRouter, AnuncioRouter } from "#src/routes";
 import { settings } from "#src/config";
 import cors from "cors";
 
@@ -12,6 +12,7 @@ app.get("/", (req, res) => {
 });
 app.use("/auth", AuthRouter);
 app.use("/users", UserRouter);
+app.use("/anuncios", AnuncioRouter);
 
 app.listen(port, () => {
   console.log(`Servidor rodando na porta http://localhost:${port}`);
