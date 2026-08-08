@@ -1,16 +1,16 @@
 import { Router } from "express";
 import { UserController } from "#src/controllers";
-import { verifyJWT } from "#src/middlewares";
+import { verifyJWT, upload } from "#src/middlewares";
 
 const UserRouter = Router();
-const { createUser, findAll, findById, findByEmail, update, deleteById } = UserController();
+const { create, findAll, findById, findByEmail, update, deleteById } = UserController();
 
 UserRouter.get("/", verifyJWT, findAll);
 UserRouter.get("/email/:email", verifyJWT, findByEmail);
-UserRouter.get("/:id", findById);
-UserRouter.post("/", createUser);
-UserRouter.put("/:id", verifyJWT, update);
-UserRouter.delete("/:id", verifyJWT, deleteById);
+UserRouter.get("/:id", verifyJWT, findById);
+UserRouter.post("/", create);
+UserRouter.put("/me", verifyJWT, upload.single("imagem"), update);
+UserRouter.delete("/me", verifyJWT, deleteById);
 
 export { UserRouter };
 export default UserRouter;
