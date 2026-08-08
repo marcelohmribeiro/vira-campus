@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { prisma } from "#src/service";
+import { prisma } from "#src/services/index.js";
 import { settings } from "#src/config";
 
 const AuthController = () => {
@@ -11,26 +11,31 @@ const AuthController = () => {
         return res.status(400).json({ error: "E-mail e senha são obrigatórios" });
       }
 
-      const data = await prisma.usuario.findUnique({
+      const usuario = await prisma.usuario.findUnique({
         where: { email }
       })
-      if(!data) {
+      if(!usuario) {
         return res.status(401).json({ error: "E-mail ou senha inválidos" });
       }
 
-      const checkPassword = await bcrypt.compare(senha, data.senhaHash);
+      const checkPassword = await bcrypt.compare(senha, usuario.senhaHash);
       if (!checkPassword) {
         return res.status(401).json({ error: "E-mail ou senha inválidos" });
       }
 
       const token = jwt.sign(
-        { id: data.id },
+        { id: usuario.id },
         settings.JWT_SECRET,
         { expiresIn: "1d" },
       );
-      data.token = token
-      if ('senha' in data) delete data.senha
-      res.json(data)
+      
+      return res.json({
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        fotoPerfilUrl: usuario.fotoPerfilUrl,
+        token
+      })
     } catch (error) {
     next(error);
     }
