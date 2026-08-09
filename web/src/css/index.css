@@ -79,6 +79,30 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --background: #f7f8f2;
+  --foreground: #173b32;
+
+  --card: #ffffff;
+  --card-foreground: #173b32;
+
+  --primary: #173b32;
+  --primary-foreground: #f7f8f2;
+
+  --secondary: #eaf8d7;
+  --secondary-foreground: #2d5c43;
+
+  --muted: #edf3ec;
+  --muted-foreground: #64746f;
+
+  --accent: #b6ef67;
+  --accent-foreground: #173b32;
+
+  --border: #dce4df;
+  --input: #dce4df;
+  --ring: #4f7c61;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
 }
 
 .dark {
