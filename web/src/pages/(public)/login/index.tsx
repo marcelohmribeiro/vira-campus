@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import {
 	ArrowRight,
 	BookOpen,
@@ -21,20 +22,39 @@ import {
 } from 'src/components/ui/card'
 import { Input } from 'src/components/ui/input'
 import { useAuth } from 'src/hooks/auth'
+import type { ApiErrorResponse } from 'src/types'
+import { AxiosError } from 'axios'
 
-const communityBenefits = [
+interface CommunityBenefit {
+	icon: ReactNode
+	label: string
+}
+
+const communityBenefits: CommunityBenefit[] = [
 	{ icon: <BookOpen className='size-4 text-[#b6ef67]' />, label: 'Livros e materiais' },
 	{ icon: <GraduationCap className='size-4 text-[#b6ef67]' />, label: 'Feito para estudantes' },
 	{ icon: <Leaf className='size-4 text-[#b6ef67]' />, label: 'Consumo consciente' },
 ]
 
 export default function Login() {
+	const [email, setEmail] = useState('')
+	const [password, setPassword] = useState('')
 	const [showPassword, setShowPassword] = useState(false)
-	const { signin } = useAuth()
+	const [errorMessage, setErrorMessage] = useState('')
+	const { signin, isLoading } = useAuth()
 
-	function handleSubmit(event) {
-		event.preventDefault()
-		signin()
+	async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+		e.preventDefault()
+		setErrorMessage('')
+
+		try {
+			await signin({ email, senha: password })
+		} catch (error) {
+			setErrorMessage(
+				error.response?.data?.error ||
+					'Não foi possível entrar agora. Confira seus dados e tente novamente.',
+			)
+		}
 	}
 
 	return (
@@ -128,7 +148,7 @@ export default function Login() {
 								<div className='space-y-2'>
 									<div className='gap-4'>
 										<label htmlFor='email' className='text-sm font-medium text-[#29473f]'>
-										E-mail institucional
+										E-mail
 										</label>
 									</div>
 									<div className='relative'>
@@ -138,7 +158,12 @@ export default function Login() {
 											name='email'
 											type='email'
 											autoComplete='email'
-											placeholder='voce@universidade.edu.br'
+											placeholder='voce@gmail.com'
+											value={email}
+											onChange={(e: ChangeEvent<HTMLInputElement>) => {
+												setEmail(e.target.value)
+												setErrorMessage('')
+											}}
 											required
 											className='h-12 rounded-xl border-[#dce4df] bg-[#fbfcf9] pr-4 pl-10.5 text-[#173b32] placeholder:text-[#9aa7a3] focus-visible:border-[#4f7c61] focus-visible:ring-[#4f7c61]/15'
 										/>
@@ -165,6 +190,11 @@ export default function Login() {
 											type={showPassword ? 'text' : 'password'}
 											autoComplete='current-password'
 											placeholder='Digite sua senha'
+											value={password}
+											onChange={(e: ChangeEvent<HTMLInputElement>) => {
+												setPassword(e.target.value)
+												setErrorMessage('')
+											}}
 											required
 											className='h-12 rounded-xl border-[#dce4df] bg-[#fbfcf9] pr-11 pl-10.5 text-[#173b32] placeholder:text-[#9aa7a3] focus-visible:border-[#4f7c61] focus-visible:ring-[#4f7c61]/15'
 										/>
@@ -180,9 +210,6 @@ export default function Login() {
 											{showPassword ? <EyeOff /> : <Eye />}
 										</Button>
 									</div>
-									<div>
-										
-									</div>
 								</div>
 
 								<label className='flex w-fit cursor-pointer items-center gap-2.5 text-sm text-[#64746f]'>
@@ -194,13 +221,32 @@ export default function Login() {
 									Manter conectado neste dispositivo
 								</label>
 
+								{errorMessage && (
+									<div
+										role='alert'
+										className='rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-5 text-red-700'
+									>
+										{errorMessage}
+									</div>
+								)}
+
 								<Button
 									type='submit'
 									size='lg'
+									disabled={isLoading}
 									className='h-12 w-full rounded-xl bg-[#173b32] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(23,59,50,0.18)] hover:bg-[#234f43]'
 								>
-									Entrar na minha conta
-									<ArrowRight data-icon='inline-end' className='ml-1 size-4 transition-transform group-hover/button:translate-x-0.5' />
+									{isLoading ? (
+										<>
+											<span className='size-4 animate-spin rounded-full border-2 border-white/35 border-t-white' />
+											Entrando...
+										</>
+									) : (
+										<>
+											Entrar na minha conta
+											<ArrowRight data-icon='inline-end' className='ml-1 size-4 transition-transform group-hover/button:translate-x-0.5' />
+										</>
+									)}
 								</Button>
 							</form>
 
@@ -214,19 +260,15 @@ export default function Login() {
 
 							<p className='text-center text-sm text-[#64746f]'>
 								Ainda não faz parte?{' '}
-								<a
-									href='mailto:suporte@viracampus.com.br?subject=Solicitar%20acesso'
+								<Link
+									to='/cadastro'
 									className='font-semibold text-[#2d5c43] hover:underline hover:underline-offset-4'
 								>
-									Solicite seu acesso
-								</a>
+									Cadastre-se aqui
+								</Link>
 							</p>
 						</CardContent>
 					</Card>
-
-					<p className='mt-6 text-center text-xs leading-5 text-[#7e8c87]'>
-						Ao entrar, você concorda em manter uma comunidade segura, respeitosa e sustentável.
-					</p>
 				</div>
 			</section>
 		</main>
