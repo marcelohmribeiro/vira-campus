@@ -1,6 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { AxiosError } from 'axios'
 import {
 	ArrowLeft,
 	ArrowRight,
@@ -26,9 +25,9 @@ import {
 	CardTitle,
 } from 'src/components/ui/card'
 import { Input } from 'src/components/ui/input'
+import { getApiErrorMessage } from 'src/lib/apiErrors'
 import { api } from 'src/services/_api'
 import type { Usuario } from 'src/types'
-import type { ApiErrorResponse } from 'src/types/api'
 
 interface CadastroForm {
 	nome: string
@@ -78,10 +77,11 @@ export default function Cadastro() {
 			setCreatedUser(data)
 			setForm(initialForm)
 		} catch (error) {
-			const axiosError = error as AxiosError<ApiErrorResponse>
 			setErrorMessage(
-				axiosError.response?.data?.error ||
+				getApiErrorMessage(
+					error,
 					'Não foi possível criar sua conta agora. Tente novamente em instantes.',
+				),
 			)
 		} finally {
 			setIsSubmitting(false)

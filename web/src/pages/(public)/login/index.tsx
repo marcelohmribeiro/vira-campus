@@ -22,8 +22,7 @@ import {
 } from 'src/components/ui/card'
 import { Input } from 'src/components/ui/input'
 import { useAuth } from 'src/hooks/auth'
-import type { ApiErrorResponse } from 'src/types'
-import { AxiosError } from 'axios'
+import { getApiErrorMessage } from 'src/lib/apiErrors'
 
 interface CommunityBenefit {
 	icon: ReactNode
@@ -51,8 +50,10 @@ export default function Login() {
 			await signin({ email, senha: password })
 		} catch (error) {
 			setErrorMessage(
-				error.response?.data?.error ||
+				getApiErrorMessage(
+					error,
 					'Não foi possível entrar agora. Confira seus dados e tente novamente.',
+				),
 			)
 		}
 	}
