@@ -1,4 +1,4 @@
-import { Archive, Home, PackagePlus, User, type LucideIcon } from 'lucide-react'
+import { Archive, Home, PackagePlus, type LucideIcon } from 'lucide-react'
 
 export interface NavigationItem {
 	title: string
@@ -23,12 +23,7 @@ const navigation: NavigationItem[] = [
 		title: 'Anunciar',
 		icon: PackagePlus,
 		href: '/auth/anuncios/novo',
-	},
-	{
-		title: 'Perfil',
-		icon: User,
-		href: '/auth/perfil',
-	},
+	}
 ]
 
 export { navigation }

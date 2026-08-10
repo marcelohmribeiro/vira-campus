@@ -188,7 +188,7 @@ function StatusFilters({ value, onChange }: StatusFiltersProps) {
 		<div
 			role='group'
 			aria-label='Filtrar anúncios por status'
-			className='flex gap-1 overflow-x-auto rounded-2xl border border-border bg-card p-1.5'
+			className='grid grid-cols-2 gap-1 rounded-2xl border border-border bg-card p-1.5 sm:flex'
 		>
 			{statusFilters.map((filter) => (
 				<button
@@ -197,7 +197,7 @@ function StatusFilters({ value, onChange }: StatusFiltersProps) {
 					onClick={() => onChange(filter.value)}
 					aria-pressed={value === filter.value}
 					className={cn(
-						'h-11 flex-none rounded-xl px-3.5 text-xs font-semibold transition-colors sm:flex-1',
+						'h-11 min-w-0 rounded-xl px-3 text-xs font-semibold transition-colors sm:flex-1',
 						value === filter.value
 							? 'bg-primary text-primary-foreground shadow-sm'
 							: 'text-muted-foreground hover:bg-muted hover:text-foreground',

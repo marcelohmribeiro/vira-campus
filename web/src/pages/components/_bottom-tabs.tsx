@@ -1,35 +1,32 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Archive, Home, User, Settings, Plus } from 'lucide-react'
+import { Archive, Home, Plus } from 'lucide-react'
 import { cn } from 'src/lib/utils'
 import type { NavigationItem } from 'src/constants'
 
-const tabs: NavigationItem[] = [
-	{ title: 'Explorar', icon: Home, href: '/auth/explorar' },
-	{ title: 'Meus', icon: Archive, href: '/auth/meus-anuncios', matchPrefix: true },
-	{ title: 'Perfil', icon: User, href: '/auth/perfil' },
-	{ title: 'Ajustes', icon: Settings, href: '/auth/configuracoes' },
-]
+const exploreTab: NavigationItem = {
+	title: 'Explorar',
+	icon: Home,
+	href: '/auth/explorar',
+}
+
+const myAdsTab: NavigationItem = {
+	title: 'Meus anúncios',
+	icon: Archive,
+	href: '/auth/meus-anuncios',
+	matchPrefix: true,
+}
 
 export function BottomTabs() {
 	const location = useLocation()
 	const isCreateActive = location.pathname === '/auth/anuncios/novo'
-
-	// Split tabs around the center FAB
-	const half = Math.floor(tabs.length / 2)
-	const leftItems = tabs.slice(0, half)
-	const rightItems = tabs.slice(half)
 
 	return (
 		<nav
 			aria-label='Navegação principal'
 			className='fixed right-0 bottom-0 left-0 z-50 flex h-[calc(4rem_+_env(safe-area-inset-bottom))] items-stretch border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden'
 		>
-			{/* Left tabs */}
-			{leftItems.map((item) => (
-				<TabItem key={item.href} item={item} isActive={isCurrentPath(location.pathname, item)} />
-			))}
+			<TabItem item={exploreTab} isActive={isCurrentPath(location.pathname, exploreTab)} />
 
-			{/* Center FAB — Anunciar */}
 			<div className='relative flex flex-1 items-center justify-center'>
 				<Link
 					to='/auth/anuncios/novo'
@@ -44,10 +41,7 @@ export function BottomTabs() {
 				</Link>
 			</div>
 
-			{/* Right tabs */}
-			{rightItems.map((item) => (
-				<TabItem key={item.href} item={item} isActive={isCurrentPath(location.pathname, item)} />
-			))}
+			<TabItem item={myAdsTab} isActive={isCurrentPath(location.pathname, myAdsTab)} />
 		</nav>
 	)
 }

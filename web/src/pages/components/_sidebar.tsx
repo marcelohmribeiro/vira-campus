@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from 'src/lib/utils'
-import { Settings, ChevronLeft, Recycle } from 'lucide-react'
+import { User, ChevronLeft, Recycle } from 'lucide-react'
 import { Button } from 'src/components/ui/button'
 import { navigation } from 'src/constants'
 import type { NavigationItem } from 'src/constants'
@@ -60,7 +60,7 @@ function SidebarContent({ collapsed }: SidebarContentProps) {
 
 			<div className='shrink-0 border-t border-border p-3'>
 				<Link
-					to='/auth/configuracoes'
+					to='/auth/perfil'
 					aria-label={collapsed ? 'Configurações' : undefined}
 					title={collapsed ? 'Configurações' : undefined}
 					className={cn(
@@ -68,8 +68,8 @@ function SidebarContent({ collapsed }: SidebarContentProps) {
 						collapsed && 'md:justify-center'
 					)}
 				>
-					<Settings className='size-5 shrink-0' />
-					{showLabels && <span>Configurações</span>}
+					<User className='size-5 shrink-0' />
+					{showLabels && <span>Perfil</span>}
 				</Link>
 			</div>
 		</div>

@@ -51,7 +51,7 @@ export default function Explorar() {
 			.then(setCategorias)
 			.catch(() => {
 				if (!controller.signal.aborted) {
-					toast.error('Não foi possível carregar as categorias.')
+					toast.error('Não foi possível carregar os dados.')
 				}
 			})
 
