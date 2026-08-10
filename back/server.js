@@ -7,7 +7,7 @@ import cors from "cors";
 const app = express();
 const port = settings.PORT;
 app.use(cors({
-  origin: `${settings.FRONTEND_URL}`,
+  origin: settings.FRONTEND_URL,
 }));
 app.use(express.json());
 app.get("/", (req, res) => {
