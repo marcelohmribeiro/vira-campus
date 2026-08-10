@@ -1,5 +1,10 @@
 import { prisma } from "#src/services/index.js";
-import { createAnuncioSchema, updateAnuncioSchema } from "#src/schemas";
+import {
+  createAnuncioSchema,
+  listAnunciosQuerySchema,
+  listMeusAnunciosQuerySchema,
+  updateAnuncioSchema,
+} from "#src/schemas";
 
 const anuncioRelations = {
   categoria: {
@@ -23,6 +28,18 @@ function serializeAnuncio(anuncio) {
     ...anuncio,
     preco: anuncio.preco === null ? null : Number(anuncio.preco),
   };
+}
+
+function getOrderBy(order) {
+  if (order === "menor-preco") {
+    return [{ preco: { sort: "asc", nulls: "first" } }, { id: "desc" }];
+  }
+
+  if (order === "maior-preco") {
+    return [{ preco: { sort: "desc", nulls: "last" } }, { id: "desc" }];
+  }
+
+  return [{ createdAt: "desc" }, { id: "desc" }];
 }
 
 const AnuncioController = () => {
@@ -61,9 +78,22 @@ const AnuncioController = () => {
 
   async function findAll(req, res, next) {
     try {
+      const query = listAnunciosQuerySchema.parse(req.query);
       const anuncios = await prisma.anuncio.findMany({
+        where: {
+          status: "ATIVO",
+          ...(query.search && {
+            titulo: { contains: query.search, mode: "insensitive" },
+          }),
+          ...(query.tipo && { tipo: query.tipo }),
+          ...(query.categoriaId && { categoriaId: query.categoriaId }),
+        },
+        orderBy: getOrderBy(query.ordenarPor),
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
         include: anuncioRelations,
       });
+
       return res.status(200).json(anuncios.map(serializeAnuncio));
     } catch (error) {
       next(error);
@@ -162,11 +192,17 @@ const AnuncioController = () => {
   async function findByUsuarioId(req, res, next) {
     try {
       const usuarioId = req.user.id;
+      const query = listMeusAnunciosQuerySchema.parse(req.query);
 
       const anuncios = await prisma.anuncio.findMany({
-        where: { usuarioId },
+        where: {
+          usuarioId,
+          ...(query.status && { status: query.status }),
+        },
         include: anuncioRelations,
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
       });
       return res.status(200).json(anuncios.map(serializeAnuncio));
     } catch (error) {
