@@ -2,6 +2,7 @@
   "type": "module",
   "imports": {
     "#src/schemas": "./src/schemas/index.js",
+    "#src/utils": "./src/utils/index.js",
     "#src/config": "./src/config/index.js",
     "#src/controllers": "./src/controllers/index.js",
     "#src/middlewares": "./src/middlewares/index.js",
