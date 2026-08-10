@@ -1,5 +1,25 @@
 export type TipoAnuncio = "VENDA" | "DOACAO"
 export type StatusAnuncio = "ATIVO" | "RESERVADO" | "CONCLUIDO"
+export type OrdenarAnuncios = "recentes" | "menor-preco" | "maior-preco"
+
+export interface FiltrosAnuncios {
+  search?: string
+  tipo?: TipoAnuncio
+  categoriaId?: number
+  ordenarPor?: OrdenarAnuncios
+}
+
+export interface FiltrosMeusAnuncios {
+  status?: StatusAnuncio
+}
+
+interface PaginacaoParams {
+  page: number
+  limit: number
+}
+
+export type ListarAnunciosParams = FiltrosAnuncios & PaginacaoParams
+export type ListarMeusAnunciosParams = FiltrosMeusAnuncios & PaginacaoParams
 
 export interface Categoria {
   id: number

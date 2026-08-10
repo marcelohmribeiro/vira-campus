@@ -1,5 +1,10 @@
 import { api } from 'src/services/_api'
-import type { Anuncio, AnuncioFormValues } from 'src/types'
+import type {
+	Anuncio,
+	AnuncioFormValues,
+	ListarAnunciosParams,
+	ListarMeusAnunciosParams,
+} from 'src/types'
 
 interface RequestOptions {
 	signal?: AbortSignal
@@ -22,8 +27,13 @@ function createAnuncioFormData(values: AnuncioFormValues) {
 	return data
 }
 
-export async function listarMeusAnuncios(options: RequestOptions = {}) {
-	const response = await api.get<Anuncio[]>('/anuncios/meus', options)
+export async function listarMeusAnuncios(params: ListarMeusAnunciosParams) {
+	const response = await api.get<Anuncio[]>('/anuncios/meus', { params })
+	return response.data
+}
+
+export async function listarTodosAnuncios(params: ListarAnunciosParams) {
+	const response = await api.get<Anuncio[]>('/anuncios', { params })
 	return response.data
 }
 

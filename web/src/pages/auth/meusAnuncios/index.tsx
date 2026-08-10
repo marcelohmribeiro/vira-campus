@@ -1,14 +1,15 @@
-import { useMemo, useState } from 'react'
-import { Archive, PackagePlus, Plus } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Archive, PackagePlus, Plus, RefreshCw } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { DeleteAnuncioDialog, MeuAnuncioCard, MeuAnuncioCardSkeleton, RequestErrorState } from 'src/components'
 import { Button } from 'src/components/ui'
-import { useMeusAnuncios } from 'src/hooks/useMeusAnuncios'
+import { useInfiniteScroll } from 'src/hooks/useInfiniteScroll'
 import { getApiErrorMessage } from 'src/lib/apiErrors'
 import { cn } from 'src/lib/utils'
 import { removerAnuncio } from 'src/services'
-import type { Anuncio, StatusAnuncio } from 'src/types'
+import { useMeusAnunciosStore } from 'src/store/fetchMeusAnuncios'
+import type { Anuncio, FiltrosMeusAnuncios, StatusAnuncio } from 'src/types'
 
 type StatusFilter = 'TODOS' | StatusAnuncio
 
@@ -20,16 +21,38 @@ const statusFilters: { value: StatusFilter; label: string }[] = [
 ]
 
 export default function MeusAnuncios() {
-	const { anuncios, errorMessage, isLoading, reload, removeFromList } = useMeusAnuncios()
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('TODOS')
 	const [anuncioToDelete, setAnuncioToDelete] = useState<Anuncio | null>(null)
 	const [deleteError, setDeleteError] = useState('')
 	const [isDeleting, setIsDeleting] = useState(false)
 
-	const filteredAnuncios = useMemo(() => {
-		if (statusFilter === 'TODOS') return anuncios
-		return anuncios.filter((anuncio) => anuncio.status === statusFilter)
-	}, [anuncios, statusFilter])
+	const {
+		items: anuncios,
+		hasMore,
+		isLoading,
+		errorMessage,
+		loadPage,
+		removeItem,
+	} = useMeusAnunciosStore()
+
+	const filtros = useMemo<FiltrosMeusAnuncios>(() => ({
+		status: statusFilter === 'TODOS' ? undefined : statusFilter,
+	}), [statusFilter])
+
+	useEffect(() => {
+		void loadPage(filtros, true)
+	}, [filtros, loadPage])
+
+	const loadMore = useCallback(() => {
+		void loadPage(filtros)
+	}, [filtros, loadPage])
+
+	const loadMoreRef = useInfiniteScroll(
+		loadMore,
+		hasMore && !isLoading && !errorMessage,
+	)
+
+	const isFirstLoad = isLoading && anuncios.length === 0
 
 	function openDeleteDialog(anuncio: Anuncio) {
 		setDeleteError('')
@@ -50,7 +73,7 @@ export default function MeusAnuncios() {
 			setIsDeleting(true)
 			setDeleteError('')
 			await removerAnuncio(anuncioToDelete.id)
-			removeFromList(anuncioToDelete.id)
+			removeItem(anuncioToDelete.id)
 			setAnuncioToDelete(null)
 			toast.success('Anúncio excluído com sucesso.')
 		} catch (error) {
@@ -64,27 +87,25 @@ export default function MeusAnuncios() {
 
 	return (
 		<div className='mx-auto flex w-full max-w-5xl flex-col gap-6'>
-			<PageHeader total={anuncios.length} />
+			<PageHeader total={anuncios.length} isLoading={isFirstLoad} />
 
-			{!isLoading && !errorMessage && anuncios.length > 0 && (
-				<StatusFilters value={statusFilter} onChange={setStatusFilter} />
-			)}
+			<StatusFilters value={statusFilter} onChange={setStatusFilter} />
 
-			{isLoading ? (
+			{isFirstLoad ? (
 				<LoadingList />
-			) : errorMessage ? (
+			) : errorMessage && anuncios.length === 0 ? (
 				<RequestErrorState
 					title='Não foi possível abrir seu histórico'
 					message={errorMessage}
-					onRetry={reload}
+					onRetry={() => void loadPage(filtros, true)}
 				/>
-			) : anuncios.length === 0 ? (
+			) : anuncios.length === 0 && statusFilter === 'TODOS' ? (
 				<EmptyHistory />
-			) : filteredAnuncios.length === 0 ? (
+			) : anuncios.length === 0 ? (
 				<EmptyFilter onClear={() => setStatusFilter('TODOS')} />
 			) : (
 				<div className='space-y-4'>
-					{filteredAnuncios.map((anuncio) => (
+					{anuncios.map((anuncio) => (
 						<MeuAnuncioCard
 							key={anuncio.id}
 							anuncio={anuncio}
@@ -92,8 +113,24 @@ export default function MeusAnuncios() {
 							isDeleting={isDeleting && anuncioToDelete?.id === anuncio.id}
 						/>
 					))}
+					{isLoading && <LoadingMore />}
 				</div>
 			)}
+
+			{errorMessage && anuncios.length > 0 && (
+				<div
+					role='alert'
+					className='flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-4 text-center sm:flex-row sm:justify-center'
+				>
+					<p className='text-sm text-muted-foreground'>{errorMessage}</p>
+					<Button type='button' variant='outline' onClick={loadMore}>
+						<RefreshCw className='size-4' />
+						Tentar novamente
+					</Button>
+				</div>
+			)}
+
+			<div ref={loadMoreRef} className='h-2' />
 
 			<DeleteAnuncioDialog
 				anuncio={anuncioToDelete}
@@ -107,7 +144,12 @@ export default function MeusAnuncios() {
 	)
 }
 
-function PageHeader({ total }: { total: number }) {
+interface PageHeaderProps {
+	total: number
+	isLoading: boolean
+}
+
+function PageHeader({ total, isLoading }: PageHeaderProps) {
 	return (
 		<header className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
 			<div className='flex items-start gap-3.5'>
@@ -117,9 +159,11 @@ function PageHeader({ total }: { total: number }) {
 				<div>
 					<h1 className='text-2xl font-semibold tracking-[-0.035em] text-foreground'>Meus anúncios</h1>
 					<p className='mt-1 text-sm leading-6 text-muted-foreground'>
-						{total === 0
+						{isLoading
+							? 'Carregando seus anúncios...'
+							: total === 0
 							? 'Acompanhe os produtos que você publicar.'
-							: `${total} ${total === 1 ? 'anúncio' : 'anúncios'} no seu histórico.`}
+							: `${total} ${total === 1 ? 'anúncio carregado' : 'anúncios carregados'}.`}
 					</p>
 				</div>
 			</div>
@@ -170,6 +214,16 @@ function LoadingList() {
 	return (
 		<div aria-label='Carregando seus anúncios' className='space-y-4'>
 			{Array.from({ length: 3 }).map((_, index) => (
+				<MeuAnuncioCardSkeleton key={index} />
+			))}
+		</div>
+	)
+}
+
+function LoadingMore() {
+	return (
+		<div aria-label='Carregando mais anúncios' className='space-y-4'>
+			{Array.from({ length: 2 }).map((_, index) => (
 				<MeuAnuncioCardSkeleton key={index} />
 			))}
 		</div>

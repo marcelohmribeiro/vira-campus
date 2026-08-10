@@ -1,38 +1,74 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { LoaderCircle, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
-import { FilterBar, ProductCard, ProductCardSkeleton, EmptyState, TipoFiltro, OrdenarPor } from 'src/components'
-import { api } from 'src/services'
-import type { Anuncio, Categoria } from 'src/types'
+
+import {
+	EmptyState,
+	FilterBar,
+	ProductCard,
+	ProductCardSkeleton,
+} from 'src/components'
+import type { OrdenarPor, TipoFiltro } from 'src/components/FilterBar'
+import { Button } from 'src/components/ui'
+import { useInfiniteScroll } from 'src/hooks/useInfiniteScroll'
+import { listarCategorias } from 'src/services'
+import { useAnunciosStore } from 'src/store/fetchAnuncios'
+import type { Categoria, FiltrosAnuncios } from 'src/types'
 
 export default function Explorar() {
-	const [anuncios, setAnuncios] = useState<Anuncio[]>([])
 	const [categorias, setCategorias] = useState<Categoria[]>([])
-	const [isLoading, setIsLoading] = useState(true)
-
 	const [search, setSearch] = useState('')
+	const [debouncedSearch, setDebouncedSearch] = useState('')
 	const [tipo, setTipo] = useState<TipoFiltro>('TODOS')
 	const [categoriaId, setCategoriaId] = useState('TODAS')
 	const [ordenarPor, setOrdenarPor] = useState<OrdenarPor>('recentes')
 
-	useEffect(() => {
-		async function fetchData() {
-			try {
-				setIsLoading(true)
-				const [anunciosRes, categoriasRes] = await Promise.all([
-					api.get<Anuncio[]>('/anuncios'),
-					api.get<Categoria[]>('/categorias'),
-				])
-				setAnuncios(anunciosRes.data)
-				setCategorias(categoriasRes.data)
-			} catch {
-				toast.error('Não foi possível carregar os anúncios agora.')
-			} finally {
-				setIsLoading(false)
-			}
-		}
+	const {
+		items: anuncios,
+		hasMore,
+		isLoading,
+		errorMessage,
+		loadPage: fetchAnuncios,
+	} = useAnunciosStore()
 
-		fetchData()
+	const filtros = useMemo<FiltrosAnuncios>(() => ({
+		search: debouncedSearch.trim() || undefined,
+		tipo: tipo === 'TODOS' ? undefined : tipo,
+		categoriaId: categoriaId === 'TODAS' ? undefined : Number(categoriaId),
+		ordenarPor,
+	}), [debouncedSearch, tipo, categoriaId, ordenarPor])
+
+	// Espera o usuario digitar (evitar fazer requisições a cada letra digitada)
+	useEffect(() => {
+		const timeout = window.setTimeout(() => setDebouncedSearch(search), 300)
+		return () => window.clearTimeout(timeout)
+	}, [search])
+
+	useEffect(() => {
+		const controller = new AbortController()
+
+		listarCategorias(controller.signal)
+			.then(setCategorias)
+			.catch(() => {
+				if (!controller.signal.aborted) {
+					toast.error('Não foi possível carregar as categorias.')
+				}
+			})
+
+		return () => controller.abort()
 	}, [])
+
+	useEffect(() => {
+		void fetchAnuncios(filtros, true)
+	}, [fetchAnuncios, filtros])
+
+	const loadMore = useCallback(() => {
+		void fetchAnuncios(filtros)
+	}, [fetchAnuncios, filtros])
+	const loadMoreRef = useInfiniteScroll(
+		loadMore,
+		hasMore && !isLoading && !errorMessage,
+	)
 
 	const hasFilters = search.trim() !== '' || tipo !== 'TODOS' || categoriaId !== 'TODAS'
 
@@ -42,69 +78,73 @@ export default function Explorar() {
 		setCategoriaId('TODAS')
 	}
 
-	const anunciosFiltrados = useMemo(() => {
-		let resultado = anuncios.filter((anuncio) => anuncio.status === 'ATIVO')
-
-		if (search.trim()) {
-			const termo = search.trim().toLowerCase()
-			resultado = resultado.filter((anuncio) => anuncio.titulo.toLowerCase().includes(termo))
-		}
-
-		if (tipo !== 'TODOS') {
-			resultado = resultado.filter((anuncio) => anuncio.tipo === tipo)
-		}
-
-		if (categoriaId !== 'TODAS') {
-			resultado = resultado.filter((anuncio) => String(anuncio.categoriaId) === categoriaId)
-		}
-
-		if (ordenarPor === 'menor-preco') {
-			resultado = [...resultado].sort((a, b) => (a.preco ?? 0) - (b.preco ?? 0))
-		} else if (ordenarPor === 'maior-preco') {
-			resultado = [...resultado].sort((a, b) => (b.preco ?? 0) - (a.preco ?? 0))
-		} else {
-			resultado = [...resultado].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-		}
-
-		return resultado
-	}, [anuncios, search, tipo, categoriaId, ordenarPor])
+	const isFirstLoad = isLoading && anuncios.length === 0
 
 	return (
 		<div className='mx-auto flex max-w-7xl flex-col gap-6'>
-			<div>
+			<header>
 				<h1 className='text-2xl font-semibold tracking-[-0.03em] text-foreground'>Explorar anúncios</h1>
 				<p className='mt-1 text-sm text-muted-foreground'>
-					{isLoading ? 'Carregando anúncios...' : `${anunciosFiltrados.length} item(ns) disponível(is) no seu campus`}
+					{isFirstLoad ? 'Carregando anúncios...' : `${anuncios.length} anúncio(s) carregado(s)`}
 				</p>
-			</div>
+			</header>
 
 			<FilterBar
 				search={search}
 				onSearchChange={setSearch}
 				tipo={tipo}
-				onTipoChange={setTipo as (value: TipoFiltro) => void}
+				onTipoChange={setTipo}
 				categoriaId={categoriaId}
 				onCategoriaChange={setCategoriaId}
 				categorias={categorias}
 				ordenarPor={ordenarPor}
-				onOrdenarChange={setOrdenarPor as (value: OrdenarPor) => void}
+				onOrdenarChange={setOrdenarPor}
 			/>
 
-			{isLoading ? (
-				<div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-					{Array.from({ length: 8 }).map((_, index) => (
-						<ProductCardSkeleton key={index} />
-					))}
-				</div>
-			) : anunciosFiltrados.length === 0 ? (
+			{isFirstLoad ? (
+				<ProductsSkeleton />
+			) : !errorMessage && anuncios.length === 0 ? (
 				<EmptyState hasFilters={hasFilters} onClearFilters={clearFilters} />
-			) : (
+			) : anuncios.length > 0 ? (
 				<div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-					{anunciosFiltrados.map((anuncio) => (
+					{anuncios.map((anuncio) => (
 						<ProductCard key={anuncio.id} anuncio={anuncio} />
 					))}
+					{isLoading && Array.from({ length: 4 }).map((_, index) => (
+						<ProductCardSkeleton key={`loading-${index}`} />
+					))}
+				</div>
+			) : null}
+
+			{errorMessage && (
+				<div role='alert' className='flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-4 text-center sm:flex-row sm:justify-center'>
+					<p className='text-sm text-muted-foreground'>{errorMessage}</p>
+					<Button
+						type='button'
+						variant='outline'
+						onClick={() => void fetchAnuncios(filtros, anuncios.length === 0)}
+					>
+						<RefreshCw className='size-4' />
+						Tentar novamente
+					</Button>
 				</div>
 			)}
+
+			<div ref={loadMoreRef} className='flex h-10 items-center justify-center' aria-hidden={!isLoading}>
+				{isLoading && anuncios.length > 0 && (
+					<LoaderCircle className='size-5 animate-spin text-muted-foreground' />
+				)}
+			</div>
+		</div>
+	)
+}
+
+function ProductsSkeleton() {
+	return (
+		<div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+			{Array.from({ length: 8 }).map((_, index) => (
+				<ProductCardSkeleton key={index} />
+			))}
 		</div>
 	)
 }
