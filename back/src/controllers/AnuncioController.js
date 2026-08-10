@@ -1,5 +1,29 @@
 import { prisma } from "#src/services/index.js";
-import { createAnuncioSchema, updateAnuncioSchema } from "#src/schemas"
+import { createAnuncioSchema, updateAnuncioSchema } from "#src/schemas";
+
+const anuncioRelations = {
+  categoria: {
+    select: { 
+      id: true, 
+      nome: true, 
+      slug: true 
+    },
+  },
+  usuario: {
+    select: { 
+      id: true, 
+      nome: true, 
+      fotoPerfilUrl: true 
+    },
+  },
+};
+
+function serializeAnuncio(anuncio) {
+  return {
+    ...anuncio,
+    preco: anuncio.preco === null ? null : Number(anuncio.preco),
+  };
+}
 
 const AnuncioController = () => {
   async function create(req, res, next) {
@@ -18,7 +42,7 @@ const AnuncioController = () => {
       }
 
       const preco = parsed.tipo === "DOACAO" ? null : parsed.preco;
-      const data = await prisma.anuncio.create({
+      const anuncioCriado = await prisma.anuncio.create({
         data: {
           titulo: parsed.titulo,
           descricao: parsed.descricao,
@@ -29,19 +53,18 @@ const AnuncioController = () => {
           usuarioId,
         },
       });
-      return res.status(201).json(data);
+      return res.status(201).json(serializeAnuncio(anuncioCriado));
     } catch (error) {
-      if (error.name === "ZodError") {
-        return res.status(400).json({ error: error.errors });
-      }
       next(error);
     }
   }
 
   async function findAll(req, res, next) {
     try {
-      const data = await prisma.anuncio.findMany();
-      return res.status(200).json(data);
+      const anuncios = await prisma.anuncio.findMany({
+        include: anuncioRelations,
+      });
+      return res.status(200).json(anuncios.map(serializeAnuncio));
     } catch (error) {
       next(error);
     }
@@ -50,18 +73,19 @@ const AnuncioController = () => {
   async function findById(req, res, next) {
     try {
       const id = Number(req.params.id);
-      if (Number.isNaN(id)) {
+      if (!Number.isInteger(id) || id <= 0) {
         return res.status(400).json({ error: "ID inválido" });
       }
 
-      const data = await prisma.anuncio.findUnique({
+      const anuncio = await prisma.anuncio.findUnique({
         where: { id },
+        include: anuncioRelations,
       });
-      if (!data) {
-        return res.status(404).json({ error: "Anuncio não encontrado" });
+      if (!anuncio) {
+        return res.status(404).json({ error: "Anúncio não encontrado" });
       }
 
-      return res.status(200).json(data);
+      return res.status(200).json(serializeAnuncio(anuncio));
     } catch (error) {
       next(error);
     }
@@ -71,7 +95,7 @@ const AnuncioController = () => {
     try {
       const usuarioId = req.user.id;
       const id = Number(req.params.id);
-      if (Number.isNaN(id)) {
+      if (!Number.isInteger(id) || id <= 0) {
         return res.status(400).json({ error: "ID inválido" });
       }
 
@@ -100,12 +124,13 @@ const AnuncioController = () => {
       }
 
       const imagemUrlFinal = req.file?.path ?? anuncio.imagemUrl;
-      const data = await prisma.anuncio.update({
+      const anuncioAtualizado = await prisma.anuncio.update({
         where: { id },
         data: { ...parsed, preco: precoFinal, imagemUrl: imagemUrlFinal },
+        include: anuncioRelations,
       });
 
-      return res.status(200).json(data);
+      return res.status(200).json(serializeAnuncio(anuncioAtualizado));
     } catch (error) {
       next(error);
     }
@@ -115,7 +140,7 @@ const AnuncioController = () => {
     try {
       const usuarioId = req.user.id;
       const id = Number(req.params.id);
-      if (Number.isNaN(id)) {
+      if (!Number.isInteger(id) || id <= 0) {
         return res.status(400).json({ error: "ID inválido" });
       }
 
@@ -134,12 +159,28 @@ const AnuncioController = () => {
     }
   }
 
+  async function findByUsuarioId(req, res, next) {
+    try {
+      const usuarioId = req.user.id;
+
+      const anuncios = await prisma.anuncio.findMany({
+        where: { usuarioId },
+        include: anuncioRelations,
+        orderBy: { createdAt: "desc" },
+      });
+      return res.status(200).json(anuncios.map(serializeAnuncio));
+    } catch (error) {
+      next(error);
+    }
+  }
+
   return {
     create,
     findAll,
     findById,
     update,
     deleteById,
+    findByUsuarioId,
   };
 };
 
