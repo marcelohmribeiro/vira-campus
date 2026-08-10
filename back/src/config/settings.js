@@ -1,3 +1,5 @@
+import "dotenv/config"
+
 const PORT = process.env.PORT
 // const POSTGRES_DB = process.env.POSTGRES_DB
 // const POSTGRES_USER = process.env.POSTGRES_USER

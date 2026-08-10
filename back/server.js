@@ -6,10 +6,12 @@ import cors from "cors";
 
 const app = express();
 const port = settings.PORT;
-app.use(cors());
+app.use(cors({
+  origin: `${settings.FRONTEND_URL}`,
+}));
 app.use(express.json());
 app.get("/", (req, res) => {
-  res.send("Servidor rodando");
+  res.json("Servidor rodando");
 });
 app.use("/auth", AuthRouter);
 app.use("/users", UserRouter);
