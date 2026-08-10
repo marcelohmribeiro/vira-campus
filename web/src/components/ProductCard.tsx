@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ImageOff } from 'lucide-react'
 import { AnuncioStatusLabel } from 'src/components/AnuncioStatusBadge'
+import { ImageWithFallback } from 'src/components/ImageWithFallback'
 import { Badge } from 'src/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from 'src/components/ui/avatar'
 import { formatPrice, formatRelativeDate, getInitials } from 'src/lib/formatters'
@@ -23,18 +24,17 @@ export function ProductCard({ anuncio }: ProductCardProps) {
 			)}
 		>
 			<div className='relative aspect-4/3 w-full overflow-hidden bg-muted'>
-				{anuncio.imagemUrl ? (
-					<img
-						src={anuncio.imagemUrl}
-						alt={anuncio.titulo}
-						loading='lazy'
-						className='size-full object-cover transition-transform duration-300 group-hover:scale-105'
-					/>
-				) : (
-					<div className='flex size-full items-center justify-center text-[#9aa7a3]'>
-						<ImageOff className='size-8' />
-					</div>
-				)}
+				<ImageWithFallback
+					src={anuncio.imagemUrl}
+					alt={anuncio.titulo}
+					loading='lazy'
+					className='size-full object-cover transition-transform duration-300 group-hover:scale-105'
+					fallback={
+						<div className='flex size-full items-center justify-center text-[#9aa7a3]'>
+							<ImageOff className='size-8' />
+						</div>
+					}
+				/>
 
 				<Badge className='absolute top-3 left-3 border-0 bg-white/90 text-foreground shadow-sm backdrop-blur'>
 					{anuncio.categoria?.nome}

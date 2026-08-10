@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 
 import { AnuncioStatusBadge } from 'src/components/AnuncioStatusBadge'
+import { ImageWithFallback } from 'src/components/ImageWithFallback'
 import { Avatar, AvatarFallback, AvatarImage } from 'src/components/ui/avatar'
 import { Badge } from 'src/components/ui/badge'
 import { Button } from 'src/components/ui/button'
@@ -122,18 +123,17 @@ function AnuncioImage({ anuncio }: { anuncio: Anuncio }) {
 	return (
 		<div className='overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_45px_rgba(23,59,50,0.06)] lg:col-start-1 lg:row-start-1'>
 			<div className='aspect-4/3 w-full bg-muted'>
-				{anuncio.imagemUrl ? (
-					<img
-						src={anuncio.imagemUrl}
-						alt={`Foto do produto: ${anuncio.titulo}`}
-						className='size-full object-cover'
-					/>
-				) : (
-					<div className='flex size-full flex-col items-center justify-center gap-3 text-muted-foreground'>
-						<ImageOff className='size-10' />
-						<span className='text-sm'>Imagem não disponível</span>
-					</div>
-				)}
+				<ImageWithFallback
+					src={anuncio.imagemUrl}
+					alt={`Foto do produto: ${anuncio.titulo}`}
+					className='size-full object-cover'
+					fallback={
+						<div className='flex size-full flex-col items-center justify-center gap-3 text-muted-foreground'>
+							<ImageOff className='size-10' />
+							<span className='text-sm'>Imagem não disponível</span>
+						</div>
+					}
+				/>
 			</div>
 		</div>
 	)
@@ -156,7 +156,6 @@ function SellerCard({ seller }: { seller?: Anunciante }) {
 				</Avatar>
 				<div className='min-w-0'>
 					<p className='truncate text-sm font-semibold text-foreground'>{sellerName}</p>
-					<p className='mt-0.5 text-xs text-muted-foreground'>Membro da comunidade ViraCampus</p>
 				</div>
 			</div>
 		</section>
