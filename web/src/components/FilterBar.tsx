@@ -54,7 +54,7 @@ export function FilterBar({
 				/>
 			</div>
 
-			<div className='flex shrink-0 items-center gap-1 rounded-xl bg-muted p-1'>
+			<div className='flex shrink-0 items-center justify-center gap-1 rounded-xl bg-muted p-1 sm:justify-start'>
 				{tipos.map((item) => (
 					<button
 						key={item.value}

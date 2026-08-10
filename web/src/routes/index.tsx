@@ -8,6 +8,7 @@ import EditarAnuncio from 'src/pages/auth/editarAnuncio'
 import AuthLayout from 'src/pages/auth/layout'
 import MeusAnuncios from 'src/pages/auth/meusAnuncios'
 import NovoAnuncio from 'src/pages/auth/novoAnuncio'
+import Perfil from 'src/pages/auth/perfil'
 import Index from 'src/pages'
 import Layout from 'src/pages/layout'
 
@@ -28,7 +29,7 @@ export const router = createBrowserRouter([
 					{ path: 'meus-anuncios/:id/editar', element: <EditarAnuncio /> },
 					{ path: 'anuncios/novo', element: <NovoAnuncio /> },
 					{ path: 'anuncios/:id', element: <DetalhesAnuncio /> },
-					{ path: 'perfil', element: <h1>Perfil</h1> },
+					{ path: 'perfil', element: <Perfil /> },
 					{ path: 'configuracoes', element: <h1>Configurações</h1> },
 				],
 			},
