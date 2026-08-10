@@ -11,7 +11,7 @@
     "#src/*": "./src/*"
   },
   "scripts": {
-    "generate": "plop",
+    "generate": "prisma generate",
     "start": "node server.js"
   },
   "dependencies": {
