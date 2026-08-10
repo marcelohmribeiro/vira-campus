@@ -1,21 +1,19 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { ProtectedRoute } from 'src/components/_protected-route'
-import { Sidebar } from 'src/pages/components'
+import { Sidebar, Topbar, BottomTabs } from 'src/pages/components'
 import { cn } from 'src/lib/utils'
 
 export default function Layout() {
 	const [collapsed, setCollapsed] = useState(false)
-	const [mobileOpen, setMobileOpen] = useState(false)
 
 	return (
 		<ProtectedRoute>
 			<div className='flex h-screen w-full overflow-hidden bg-background'>
+				{/* Sidebar — apenas no desktop */}
 				<Sidebar
 					collapsed={collapsed}
 					onToggle={() => setCollapsed(!collapsed)}
-					mobileOpen={mobileOpen}
-					onMobileClose={() => setMobileOpen(false)}
 				/>
 
 				<div
@@ -25,10 +23,14 @@ export default function Layout() {
 						collapsed && 'md:pl-16'
 					)}
 				>
-					<main className='flex-1 overflow-y-auto p-4 md:p-6'>
+					<Topbar />
+					<main className='flex-1 overflow-y-auto p-4 pb-[calc(5rem_+_env(safe-area-inset-bottom))] md:p-6 md:pb-6'>
 						<Outlet />
 					</main>
 				</div>
+
+				{/* Bottom Tab Bar — apenas no mobile */}
+				<BottomTabs />
 			</div>
 		</ProtectedRoute>
 	)

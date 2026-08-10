@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">ViraCampus</title>
+  <rect width="512" height="512" fill="#173b32"/>
+  <circle cx="256" cy="256" r="174" fill="#204b40"/>
+  <g
+    fill="none"
+    stroke="#b6ef67"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="2.15"
+    transform="translate(76 76) scale(15)"
+  >
+    <path d="M7 19H4.82a1.83 1.83 0 0 1-1.57-.88 1.79 1.79 0 0 1-.01-1.78L7.2 9.5"/>
+    <path d="M11 19h8.2a1.8 1.8 0 0 0 1.55-2.7l-1.1-1.9"/>
+    <path d="m14 16-3 3 3 3"/>
+    <path d="M8.29 13.6 7.2 9.5 3.1 10.6"/>
+    <path d="m9.34 5.81 1.1-1.89a1.83 1.83 0 0 1 1.57-.92 1.79 1.79 0 0 1 1.54.9l3.96 6.85"/>
+    <path d="m9.34 5.81 4.1 1.1 1.1-4.1"/>
+  </g>
+</svg>
