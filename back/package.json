@@ -12,7 +12,7 @@
   },
   "scripts": {
     "generate": "plop",
-    "postinstall": "prisma generate",
+    
     "start": "node server.js"
   },
   "dependencies": {
