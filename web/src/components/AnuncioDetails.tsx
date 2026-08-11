@@ -3,6 +3,7 @@ import {
 	CalendarDays,
 	Gift,
 	ImageOff,
+	LoaderCircle,
 	Package,
 	ShieldCheck,
 	Tag,
@@ -18,15 +19,31 @@ import type { Anunciante, Anuncio, StatusAnuncio } from 'src/types'
 
 interface AnuncioDetailsProps {
 	anuncio: Anuncio
+	isOwner: boolean
+	isReserving: boolean
+	reservationError?: string
+	onReserve: () => void
 }
 
-export function AnuncioDetails({ anuncio }: AnuncioDetailsProps) {
+export function AnuncioDetails({
+	anuncio,
+	isOwner,
+	isReserving,
+	reservationError,
+	onReserve,
+}: AnuncioDetailsProps) {
 	return (
 		<article className='grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.75fr)] lg:items-start'>
 			<AnuncioImage anuncio={anuncio} />
 
 			<section aria-label='Resumo do anúncio' className='lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2'>
-				<AnuncioSummary anuncio={anuncio} />
+				<AnuncioSummary
+					anuncio={anuncio}
+					isOwner={isOwner}
+					isReserving={isReserving}
+					reservationError={reservationError}
+					onReserve={onReserve}
+				/>
 			</section>
 
 			<div className='space-y-5 lg:col-start-1 lg:row-start-2'>
@@ -37,7 +54,13 @@ export function AnuncioDetails({ anuncio }: AnuncioDetailsProps) {
 	)
 }
 
-function AnuncioSummary({ anuncio }: { anuncio: Anuncio }) {
+function AnuncioSummary({
+	anuncio,
+	isOwner,
+	isReserving,
+	reservationError,
+	onReserve,
+}: AnuncioDetailsProps) {
 	const isDonation = anuncio.tipo === 'DOACAO'
 
 	return (
@@ -84,7 +107,13 @@ function AnuncioSummary({ anuncio }: { anuncio: Anuncio }) {
 			</div>
 
 			<SellerCard seller={anuncio.usuario} />
-			<ReservationAction status={anuncio.status} />
+			<ReservationAction
+				status={anuncio.status}
+				isOwner={isOwner}
+				isReserving={isReserving}
+				errorMessage={reservationError}
+				onReserve={onReserve}
+			/>
 		</div>
 	)
 }
@@ -162,25 +191,89 @@ function SellerCard({ seller }: { seller?: Anunciante }) {
 	)
 }
 
-function ReservationAction({ status }: { status: StatusAnuncio }) {
+interface ReservationActionProps {
+	status: StatusAnuncio
+	isOwner: boolean
+	isReserving: boolean
+	errorMessage?: string
+	onReserve: () => void
+}
+
+function getReservationCopy(
+	status: StatusAnuncio,
+	isOwner: boolean,
+	isReserving: boolean,
+) {
+	if (isReserving) {
+		return {
+			button: 'Reservando...',
+			help: 'Confirmando a disponibilidade deste item.',
+		}
+	}
+
+	if (isOwner && status === 'ATIVO') {
+		return {
+			button: 'Este anúncio é seu',
+			help: 'Você não pode reservar um item publicado por você.',
+		}
+	}
+
+	if (status === 'RESERVADO') {
+		return {
+			button: 'Item reservado',
+			help: 'Este item já foi reservado.',
+		}
+	}
+
+	if (status === 'CONCLUIDO') {
+		return {
+			button: 'Negociação concluída',
+			help: 'Este anúncio não está disponível para reserva.',
+		}
+	}
+
+	return {
+		button: 'Reservar item',
+		help: 'Ao reservar, o item ficará indisponível para outros estudantes.',
+	}
+}
+
+function ReservationAction({
+	status,
+	isOwner,
+	isReserving,
+	errorMessage,
+	onReserve,
+}: ReservationActionProps) {
 	const isAvailable = status === 'ATIVO'
+	const canReserve = isAvailable && !isOwner
+	const copy = getReservationCopy(status, isOwner, isReserving)
 
 	return (
 		<div className='mt-6'>
 			<Button
 				type='button'
-				disabled
+				disabled={!canReserve || isReserving}
+				onClick={onReserve}
+				aria-busy={isReserving}
 				aria-describedby='reservation-help'
 				className='h-12 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_rgba(23,59,50,0.18)] disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none'
 			>
-				<Bookmark className='size-4.5' />
-				{isAvailable ? 'Reservar item — em breve' : 'Item indisponível'}
+				{isReserving ? (
+					<LoaderCircle className='size-4.5 animate-spin' />
+				) : (
+					<Bookmark className='size-4.5' />
+				)}
+				{copy.button}
 			</Button>
 			<p id='reservation-help' className='mt-2.5 text-center text-xs leading-5 text-muted-foreground'>
-				{isAvailable
-					? 'A reserva online estará disponível em breve.'
-					: 'Este anúncio não está disponível para reserva.'}
+				{copy.help}
 			</p>
+			{errorMessage && (
+				<p role='alert' className='mt-2 text-center text-xs font-medium text-destructive'>
+					{errorMessage}
+				</p>
+			)}
 		</div>
 	)
 }

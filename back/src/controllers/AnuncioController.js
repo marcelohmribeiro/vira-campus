@@ -189,6 +189,53 @@ const AnuncioController = () => {
     }
   }
 
+  async function reserve(req, res, next) {
+    try {
+      const usuarioId = req.user.id;
+      const id = Number(req.params.id);
+
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: "ID inválido" });
+      }
+
+      const result = await prisma.anuncio.updateMany({
+        where: {
+          id,
+          status: "ATIVO",
+          usuarioId: { not: usuarioId },
+        },
+        data: { status: "RESERVADO" },
+      });
+
+      if (result.count === 0) {
+        const anuncio = await prisma.anuncio.findUnique({ where: { id } });
+
+        if (!anuncio) {
+          return res.status(404).json({ error: "Anúncio não encontrado" });
+        }
+
+        if (anuncio.usuarioId === usuarioId) {
+          return res.status(403).json({ error: "Você não pode reservar seu próprio anúncio" });
+        }
+
+        return res.status(409).json({ error: "Este anúncio não está mais disponível" });
+      }
+
+      const anuncioReservado = await prisma.anuncio.findUnique({
+        where: { id },
+        include: anuncioRelations,
+      });
+
+      if (!anuncioReservado) {
+        return res.status(404).json({ error: "Anúncio não encontrado" });
+      }
+
+      return res.status(200).json(serializeAnuncio(anuncioReservado));
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async function findByUsuarioId(req, res, next) {
     try {
       const usuarioId = req.user.id;
@@ -217,6 +264,7 @@ const AnuncioController = () => {
     update,
     deleteById,
     findByUsuarioId,
+    reserve,
   };
 };
 

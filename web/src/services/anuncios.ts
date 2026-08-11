@@ -55,3 +55,8 @@ export async function editarAnuncio(id: number, values: AnuncioFormValues) {
 export async function removerAnuncio(id: number) {
 	await api.delete(`/anuncios/${id}`)
 }
+
+export async function reservarAnuncio(id: number) {
+	const response = await api.post<Anuncio>(`/anuncios/${id}/reservar`)
+	return response.data
+}
